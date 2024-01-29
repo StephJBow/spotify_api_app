@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import { Credentials } from './Credentials';
-import { Recommendation } from './types';
+import { Recommendation } from './Types';
 
 function App() {
 	const spotify = Credentials();
