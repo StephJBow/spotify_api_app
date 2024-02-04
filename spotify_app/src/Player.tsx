@@ -2,23 +2,35 @@ import React, { useEffect } from 'react';
 import { Recommendation } from './Types';
 
 interface PlayerProps {
-	token: string;
+	accessToken: string;
 	currentSong: Recommendation;
 }
 
-const Player = ({ token, currentSong }: PlayerProps) => {
+const Player = ({ accessToken, currentSong }: PlayerProps) => {
 	const playSong = () => {
-		fetch('https://api.spotify.com/v1/me/player/play'),
-			{
-				method: 'PUT',
-				body: {
-					context_uri: `${currentSong.uri}`,
-					offset: {
-						position: 5,
-					},
-					position_ms: 0,
+		console.log('access token in play request', accessToken);
+		console.log('uri', currentSong.uri);
+		fetch('https://api.spotify.com/v1/me/player/play', {
+			method: 'PUT',
+			headers: {
+				Authorization: 'Bearer ' + accessToken,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				context_uri: currentSong.uri,
+				offset: {
+					position: 5,
 				},
-			};
+				position_ms: 0,
+			}),
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				console.log('Play response:', data);
+			})
+			.catch((error) => {
+				console.error('Error playing song:', error);
+			});
 	};
 
 	return (
