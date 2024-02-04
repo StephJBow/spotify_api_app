@@ -1,6 +1,7 @@
 export interface Recommendation {
-	Title: string;
-	Artist: string;
-	AlbumName: string;
-	AlbumArt: string;
+	title: string;
+	artist: string;
+	albumName: string;
+	albumArt: string;
+	uri: string;
 }

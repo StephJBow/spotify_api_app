@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import { Credentials } from './Credentials';
-import { Recommendation } from './types';
+import { Recommendation } from './Types';
+import Player from './Player';
 
 function App() {
 	const spotify = Credentials();
 
 	console.log('RENDERING APP.TSX');
 
-	const [token, setToken] = useState('');
+	const [token, setToken] = useState<string>('');
 	const [recommendations, setRecommendations] = useState<
 		Recommendation[] | null
 	>(null);
@@ -53,12 +54,14 @@ function App() {
 							return recsResponse.json();
 						})
 						.then((recsResponseJson) => {
+							console.log(recsResponseJson);
 							let recommendationsArray =
 								recsResponseJson.tracks.map((rec: any) => ({
-									Title: rec.name,
-									Artist: rec.artists[0].name,
-									AlbumName: rec.album.name,
-									AlbumArt: rec.album.images[0].url,
+									title: rec.name,
+									artist: rec.artists[0].name,
+									albumName: rec.album.name,
+									albumArt: rec.album.images[0].url,
+									uri: rec.uri,
 								}));
 							setRecommendations(recommendationsArray);
 						})
@@ -75,12 +78,12 @@ function App() {
 			});
 	}, [spotify.ClientId, spotify.ClientSecret, setToken, setRecommendations]);
 
-	console.log('recommendations:', recommendations);
-
 	return !recommendations ? (
 		<h1>Waiting for recommendations</h1>
 	) : (
-		<h1>{recommendations[0].Title}</h1>
+		<div>
+			<Player token={token} currentSong={recommendations[0]} />
+		</div>
 	);
 }
 
