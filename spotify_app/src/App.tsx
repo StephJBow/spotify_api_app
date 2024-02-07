@@ -2,85 +2,78 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { Credentials } from './Credentials';
 import { Recommendation } from './Types';
+import Player from './Player';
+import Login from './Login';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './Home';
+import CallbackComponent from './CallbackComponent';
+
 
 function App() {
-	const spotify = Credentials();
-
-	console.log('RENDERING APP.TSX');
-
-	const [token, setToken] = useState('');
+	const [accessToken, setAccessToken] = useState<string>('');
 	const [recommendations, setRecommendations] = useState<
 		Recommendation[] | null
 	>(null);
 
+	console.log('access token', accessToken);
+
 	useEffect(() => {
-		fetch('https://accounts.spotify.com/api/token', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				Authorization:
-					'Basic ' +
-					btoa(spotify.ClientId + ':' + spotify.ClientSecret),
-			},
-			body: 'grant_type=client_credentials',
-		})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error('Failed to fetch access token');
+		if (accessToken) {
+			fetch(
+				'https://api.spotify.com/v1/recommendations?seed_artists=4NHQUGzhtTLFvgF5SZesLK&seed_genres=classical%2Ccountry&seed_tracks=0c6xIDDpzE81m2q797ordA',
+				{
+					method: 'GET',
+					headers: {
+						Authorization: 'Bearer ' + accessToken,
+					},
 				}
-				return response.json();
-			})
-			.then((tokenResponse) => {
-				if (tokenResponse && tokenResponse.access_token) {
-					setToken(tokenResponse.access_token);
-
-					fetch(
-						'https://api.spotify.com/v1/recommendations?seed_artists=4NHQUGzhtTLFvgF5SZesLK&seed_genres=classical%2Ccountry&seed_tracks=0c6xIDDpzE81m2q797ordA',
-						{
-							method: 'GET',
-							headers: {
-								Authorization:
-									'Bearer ' + tokenResponse.access_token,
-							},
-						}
-					)
-						.then((recsResponse) => {
-							if (!recsResponse.ok) {
-								throw new Error(
-									'Failed to fetch recommendations'
-								);
-							}
-							return recsResponse.json();
+			)
+				.then((recsResponse) => {
+					if (!recsResponse.ok) {
+						throw new Error('Failed to fetch recommendations');
+					}
+					return recsResponse.json();
+				})
+				.then((recsResponseJson) => {
+					console.log(recsResponseJson);
+					let recommendationsArray = recsResponseJson.tracks.map(
+						(rec: any) => ({
+							title: rec.name,
+							artist: rec.artists[0].name,
+							albumName: rec.album.name,
+							albumArt: rec.album.images[0].url,
+							uri: rec.uri,
 						})
-						.then((recsResponseJson) => {
-							let recommendationsArray =
-								recsResponseJson.tracks.map((rec: any) => ({
-									Title: rec.name,
-									Artist: rec.artists[0].name,
-									AlbumName: rec.album.name,
-									AlbumArt: rec.album.images[0].url,
-								}));
-							setRecommendations(recommendationsArray);
-						})
-						.catch((error) => {
-							console.error(
-								'Error fetching recommendations:',
-								error
-							);
-						});
-				}
-			})
-			.catch((error) => {
-				console.error('Error fetching access token:', error);
-			});
-	}, [spotify.ClientId, spotify.ClientSecret, setToken, setRecommendations]);
+					);
+					setRecommendations(recommendationsArray);
+				})
+				.catch((error) => {
+					console.error('Error fetching recommendations:', error);
+				});
+		}
+	}, [accessToken]);
 
-	console.log('recommendations:', recommendations);
-
-	return !recommendations ? (
-		<h1>Waiting for recommendations</h1>
-	) : (
-		<h1>{recommendations[0].Title}</h1>
+	return (
+		<Router>
+			<Routes>
+				<Route path="/" element={<Login />} />
+				<Route
+					path="/callback"
+					element={
+						<CallbackComponent setAccessToken={setAccessToken} />
+					}
+				/>
+				<Route
+					path="/home"
+					element={
+						<Home
+							recommendations={recommendations}
+							accessToken={accessToken}
+						/>
+					}
+				/>
+			</Routes>
+		</Router>
 	);
 }
 
