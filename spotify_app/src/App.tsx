@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './Home';
 import CallbackComponent from './CallbackComponent';
 
+
 function App() {
 	const [accessToken, setAccessToken] = useState<string>('');
 	const [recommendations, setRecommendations] = useState<
